@@ -1,0 +1,182 @@
+<UserControl x:Class="HeicViewer.ViewerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:HeicViewer">
+    <Grid Background="{StaticResource ViewerBg}" Focusable="False" MouseMove="OnRootMouseMove">
+
+        <!-- Image surface -->
+        <ScrollViewer x:Name="Scroller"
+                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      Background="{StaticResource ViewerBg}"
+                      PreviewMouseWheel="OnPreviewMouseWheel">
+            <Grid x:Name="ContentGrid" Background="Transparent"
+                  MouseLeftButtonDown="OnMouseDown"
+                  MouseMove="OnMouseMove"
+                  MouseLeftButtonUp="OnMouseUp">
+                <Image x:Name="Img" Stretch="None" RenderOptions.BitmapScalingMode="HighQuality"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+        </ScrollViewer>
+
+        <TextBlock x:Name="HintText" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   TextAlignment="Center" Foreground="#66666A" FontSize="15" IsHitTestVisible="False"
+                   Text="Open a .heic file (Ctrl+O) or drop it here&#x0a;HEIC · HEIF · HIF · AVIF · JPG · PNG · WEBP · TIFF"/>
+
+        <!-- Status line (above the thumbnail strip) -->
+        <TextBlock x:Name="StatusText" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                   Margin="14,0,0,104" FontSize="12" Foreground="{StaticResource TextSecondary}"
+                   Style="{StaticResource ChromeFade}"/>
+
+        <!-- Thumbnail strip (fade handled by the wrapper Border; a Style on the ListBox
+             itself would wipe out its default control template) -->
+        <Border Style="{StaticResource ChromeFade}" Height="90" VerticalAlignment="Bottom" Margin="0,0,0,6">
+            <ListBox x:Name="Strip"
+                     Background="Transparent" BorderThickness="0" Focusable="False"
+                     ScrollViewer.CanContentScroll="True"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Focusable" Value="False"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <ContentPresenter/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <local:ThumbTile Item="{Binding}" IsStrip="True" Width="88" Clicked="OnStripTileClicked"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <!-- Zoom pill -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,104"
+                CornerRadius="18" Background="{StaticResource Glass}" BorderBrush="#22FFFFFF"
+                BorderThickness="1" Padding="8,5" Style="{StaticResource ChromeFade}">
+            <StackPanel Orientation="Horizontal">
+                <Button Style="{StaticResource GlassButton}" Width="34" Click="OnZoomOut" ToolTip="Zoom out">
+                    <TextBlock Text="−" FontFamily="Segoe UI" FontSize="16" Margin="0,-3,0,0"/>
+                </Button>
+                <TextBlock x:Name="ZoomLabel" Width="54" TextAlignment="Center" VerticalAlignment="Center"
+                           FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" FontSize="13"/>
+                <Button Style="{StaticResource GlassButton}" Width="34" Click="OnZoomIn" ToolTip="Zoom in">
+                    <TextBlock Text="+" FontFamily="Segoe UI" FontSize="16"/>
+                </Button>
+                <Button Style="{StaticResource PillButton}" Content="Fit" Margin="8,0,0,0" Click="OnFit"/>
+                <Button Style="{StaticResource PillButton}" Content="100%" Click="OnActualSize"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Side arrows -->
+        <Button x:Name="SidePrev" Width="52" Height="80" FontSize="26"
+                Content="&#xE76B;" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,60"
+                Click="OnPrev">
+            <Button.Style>
+                <Style TargetType="Button" BasedOn="{StaticResource GlassButton}">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ChromeVisible}" Value="False">
+                            <Setter Property="Opacity" Value="0"/>
+                            <Setter Property="IsHitTestVisible" Value="False"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+        <Button x:Name="SideNext" Width="52" Height="80" FontSize="26"
+                Content="&#xE76C;" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,60"
+                Click="OnNext">
+            <Button.Style>
+                <Style TargetType="Button" BasedOn="{StaticResource GlassButton}">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ChromeVisible}" Value="False">
+                            <Setter Property="Opacity" Value="0"/>
+                            <Setter Property="IsHitTestVisible" Value="False"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+
+        <!-- Top chrome -->
+        <Border VerticalAlignment="Top" Margin="12,10,12,0" CornerRadius="10"
+                Background="{StaticResource Glass}" BorderBrush="#22FFFFFF" BorderThickness="1"
+                Padding="8,6" Style="{StaticResource ChromeFade}">
+            <Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button Style="{StaticResource IconButton}" Content="&#xE72B;" Click="OnBack"
+                            ToolTip="Back to library (Esc)"/>
+                    <Button Style="{StaticResource IconButton}" Content="&#xE76B;" Margin="6,0,0,0"
+                            Click="OnPrev" ToolTip="Previous (Left)"/>
+                    <Button Style="{StaticResource IconButton}" Content="&#xE76C;" Click="OnNext"
+                            ToolTip="Next (Right)"/>
+                    <TextBlock x:Name="FileNameLabel" Margin="12,0,0,0" VerticalAlignment="Center"
+                               FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"
+                               MaxWidth="420" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource ToolButton}" Content="↺" Padding="0,7" Width="38"
+                            Click="OnRotateLeft" ToolTip="Rotate left (L)"/>
+                    <Button Style="{StaticResource ToolButton}" Content="↻" Padding="0,7" Width="38"
+                            Click="OnRotateRight" ToolTip="Rotate right (R)"/>
+                    <Button Style="{StaticResource IconButton}" Content="&#xE946;" Click="OnToggleInfo"
+                            ToolTip="Image info (I)"/>
+                    <Button x:Name="SlideShowBtn" Style="{StaticResource IconButton}" Content="&#xE768;"
+                            Click="OnToggleSlideshow" ToolTip="Slideshow (Space)"/>
+                    <Button Style="{StaticResource IconButton}" Content="&#xE74E;" Click="OnSaveAs"
+                            ToolTip="Save as JPG / PNG"/>
+                    <Button Style="{StaticResource IconButton}" Content="&#xE740;" Click="OnFullscreen"
+                            ToolTip="Fullscreen (F11)"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Info panel -->
+        <Border x:Name="InfoPanel" Width="320" HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                Margin="0,74,12,150" CornerRadius="12" Background="{StaticResource Glass}"
+                BorderBrush="#22FFFFFF" BorderThickness="1" Padding="14" Visibility="Collapsed">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <DockPanel Grid.Row="0">
+                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Width="30" Height="30"
+                            FontSize="12" Content="&#xE711;" Click="OnToggleInfo"/>
+                    <TextBlock Text="Image info" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                </DockPanel>
+                <ScrollViewer Grid.Row="1" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="InfoPairs">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Key}" FontSize="12"
+                                               Foreground="{StaticResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding Value}" FontSize="12" TextWrapping="Wrap"
+                                               Foreground="{StaticResource TextPrimary}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

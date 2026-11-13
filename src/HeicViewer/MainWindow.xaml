@@ -1,0 +1,16 @@
+<Window x:Class="HeicViewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:HeicViewer"
+        Title="HEIC Viewer"
+        Width="1150" Height="760" MinWidth="520" MinHeight="420"
+        Background="{StaticResource WindowBg}"
+        FontFamily="Segoe UI"
+        AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver"
+        KeyDown="OnKeyDown" MouseMove="OnWindowMouseMove" MouseUp="OnWindowMouseUp"
+        UseLayoutRounding="True" TextOptions.TextRenderingMode="ClearType">
+    <Grid>
+        <local:LibraryView x:Name="Library"/>
+        <local:ViewerView x:Name="Viewer" Visibility="Collapsed"/>
+    </Grid>
+</Window>

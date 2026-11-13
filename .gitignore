@@ -1,0 +1,17 @@
+# Build output
+bin/
+obj/
+publish/
+publish-singlefile/
+
+# Local caches / tooling kept out of the repo
+.nuget/
+dotnet-sdk/
+tools/dl/
+
+# IDE
+.vs/
+*.user
+
+# Local verification screenshots
+verify-*.png
