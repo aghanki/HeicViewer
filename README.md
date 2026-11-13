@@ -63,6 +63,17 @@ dotnet publish src/HeicViewer -c Release -r win-x64 --self-contained true `
 
 `DecodeService` decodes through Magick.NET's bundled libheif/libde265 and falls back to Windows Imaging Component when the (optional) HEIF/HEVC codecs are installed. Thumbnails are rendered once per file into `%LOCALAPPDATA%\HeicViewer\thumbs`, keyed by path + size + mtime, by 2–4 background workers.
 
+## Sample images
+
+`docs/samples` ships 30 royalty-free nature photos (used for the screenshots above and handy for testing the app — open the folder and browse). A selection:
+
+| | | |
+|---|---|---|
+| ![nature-01](docs/samples/nature-01.jpg) | ![nature-04](docs/samples/nature-04.jpg) | ![nature-08](docs/samples/nature-08.jpg) |
+| ![nature-13](docs/samples/nature-13.jpg) | ![nature-16](docs/samples/nature-16.jpg) | ![nature-23](docs/samples/nature-23.jpg) |
+
+Photos are from [Unsplash](https://unsplash.com) contributors, used under the [Unsplash License](https://unsplash.com/license) (free for any use). Source URLs: [docs/samples/SOURCES.txt](docs/samples/SOURCES.txt).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

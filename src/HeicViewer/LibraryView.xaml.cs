@@ -35,6 +35,7 @@ public partial class LibraryView : UserControl, INotifyPropertyChanged
     private List<ImageItem> _viewList = [];
     private CancellationTokenSource? _scanCts;
     private string? _folderScope;
+    private bool _folderAllFormats;            // folder mode shows every supported format
     private int _sortIndex;
     private string _search = "";
     private int _columns = 6;
@@ -138,18 +139,20 @@ public partial class LibraryView : UserControl, INotifyPropertyChanged
         }
     }
 
-    /// <summary>App entry point: scan every fixed drive.</summary>
+    /// <summary>App entry point: scan every fixed drive (HEIC family focus).</summary>
     public void ScanAllDrives()
     {
         _folderScope = null;
+        _folderAllFormats = false;
         UpdateScopeUi();
         StartScan(SelectedRoots());
     }
 
-    /// <summary>Open a specific folder as the library scope.</summary>
+    /// <summary>Open a specific folder as the library scope (all supported formats).</summary>
     public void OpenFolder(string folder)
     {
         _folderScope = folder;
+        _folderAllFormats = true;
         UpdateScopeUi();
         StartScan([folder]);
     }
@@ -180,8 +183,9 @@ public partial class LibraryView : UserControl, INotifyPropertyChanged
 
         var channel = Channel.CreateBounded<ImageItem>(1024);
         var ct2 = ct;
+        bool allFormats = _folderAllFormats;
         var producers = roots.Select(root =>
-            Task.Run(() => ProduceRoot(root, channel.Writer, ct2), ct2)).ToArray();
+            Task.Run(() => ProduceRoot(root, channel.Writer, ct2, allFormats), ct2)).ToArray();
         var consumer = Task.Run(() => ConsumeAsync(channel.Reader, ct2), ct2);
         _ = Task.WhenAll(producers).ContinueWith(
             _ => channel.Writer.TryComplete(), TaskScheduler.Default);
@@ -199,7 +203,7 @@ public partial class LibraryView : UserControl, INotifyPropertyChanged
         }
     }
 
-    private static void ProduceRoot(string root, ChannelWriter<ImageItem> writer, CancellationToken ct)
+    private static void ProduceRoot(string root, ChannelWriter<ImageItem> writer, CancellationToken ct, bool allFormats)
     {
         try
         {
@@ -231,7 +235,9 @@ public partial class LibraryView : UserControl, INotifyPropertyChanged
                     {
                         if (ct.IsCancellationRequested) return;
                         var ext = Path.GetExtension(file);
-                        if (ext.Length == 0 || !DecodeService.IsHeicFamily(file)) continue;
+                        if (ext.Length == 0) continue;
+                        if (allFormats ? !DecodeService.IsSupported(file) : !DecodeService.IsHeicFamily(file))
+                            continue;
                         writer.TryWrite(new ImageItem(file));
                     }
                 }

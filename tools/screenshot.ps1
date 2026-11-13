@@ -15,6 +15,8 @@ public class Win32 {
     [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
     [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr hWnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+    [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr hWnd);
+    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int cmd);
 }
 "@
 
@@ -46,6 +48,19 @@ $r = New-Object RECT
 [Win32]::GetWindowRect($h, [ref]$r) | Out-Null
 $w = $r.Right - $r.Left
 $hgt = $r.Bottom - $r.Top
+
+# If the window got minimized (user or system), restore it first.
+if ([Win32]::IsIconic($h)) {
+    [Win32]::ShowWindow($h, 9) | Out-Null    # SW_RESTORE
+    Start-Sleep -Milliseconds 800
+}
+[Win32]::GetWindowRect($h, [ref]$r) | Out-Null
+$w = $r.Right - $r.Left
+$hgt = $r.Bottom - $r.Top
+if ($w -lt 300 -or $hgt -lt 200) {
+    Write-Error "Window still tiny after restore (${w}x${hgt}) - aborting"
+    exit 1
+}
 
 # Bring the window above everything else, then nudge the cursor over it
 # so the floating chrome is shown for the capture.
