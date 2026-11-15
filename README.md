@@ -63,16 +63,11 @@ dotnet publish src/HeicViewer -c Release -r win-x64 --self-contained true `
 
 `DecodeService` decodes through Magick.NET's bundled libheif/libde265 and falls back to Windows Imaging Component when the (optional) HEIF/HEVC codecs are installed. Thumbnails are rendered once per file into `%LOCALAPPDATA%\HeicViewer\thumbs`, keyed by path + size + mtime, by 2–4 background workers.
 
-## Sample images
+## Sample images (real HEIC files)
 
-`docs/samples` ships 30 royalty-free nature photos (used for the screenshots above and handy for testing the app — open the folder and browse). A selection:
+`docs/samples` contains 30 royalty-free nature photos **in actual .heic format** — download them (or `HeicViewer-samples.zip` from [Releases](../../releases)) and open them in the app: every file decodes with the bundled libheif, no codecs needed. The screenshots above show exactly these files opened in HEIC Viewer.
 
-| | | |
-|---|---|---|
-| ![nature-01](docs/samples/nature-01.jpg) | ![nature-04](docs/samples/nature-04.jpg) | ![nature-08](docs/samples/nature-08.jpg) |
-| ![nature-13](docs/samples/nature-13.jpg) | ![nature-16](docs/samples/nature-16.jpg) | ![nature-23](docs/samples/nature-23.jpg) |
-
-Photos are from [Unsplash](https://unsplash.com) contributors, used under the [Unsplash License](https://unsplash.com/license) (free for any use). Source URLs: [docs/samples/SOURCES.txt](docs/samples/SOURCES.txt).
+Browsers can't preview HEIC, so the files aren't rendered inline here — download and try. Photo sources: [docs/samples/SOURCES.txt](docs/samples/SOURCES.txt) (Unsplash contributors, [Unsplash License](https://unsplash.com/license) — free for any use).
 
 ## License
 
